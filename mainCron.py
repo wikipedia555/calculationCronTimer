@@ -1,10 +1,10 @@
 import datetime
 # weekday (0 = Monday)
 # min. hour. day. weekday
-cronString = "15 15 31 5"
+cronString = "15 15 31 7"
 nowTime = datetime.datetime.now().timestamp()
 #check = (datetime.datetime.fromtimestamp(nowTime).day)
-dayOfMount = [31,28,31,30,31,30,31,31,30,31,30,31]
+dayOfMonth = [31,28,31,30,31,30,31,31,30,31,30,31]
 nowTime = datetime.datetime.now().replace(microsecond=0).replace(second=0)
 timerTime = nowTime.timestamp()
 #print(int(nowTime.timestamp()))
@@ -21,13 +21,13 @@ def calcDayForWeekday(timerTime, dayTimer):
 
 
 def calcDayForMonth (timerTime, day):
-    if int(dayOfMount[datetime.datetime.fromtimestamp(timerTime).month - 1]) > int(day):
+    if int(dayOfMonth[datetime.datetime.fromtimestamp(timerTime).month - 1]) > int(day):
         pass
     else:
         today = datetime.datetime.fromtimestamp(timerTime).day
-        timerTime = timerTime + (int(dayOfMount[datetime.datetime.fromtimestamp(timerTime).month - 1]) - today + 1) * 86400
-        while int(dayOfMount[datetime.datetime.fromtimestamp(timerTime).month - 1]) < int(day):
-            timerTime = timerTime + int(dayOfMount[datetime.datetime.fromtimestamp(timerTime).month - 1]) * 86400
+        timerTime = timerTime + (int(dayOfMonth[datetime.datetime.fromtimestamp(timerTime).month - 1]) - today + 1) * 86400
+        while int(dayOfMonth[datetime.datetime.fromtimestamp(timerTime).month - 1]) < int(day):
+            timerTime = timerTime + int(dayOfMonth[datetime.datetime.fromtimestamp(timerTime).month - 1]) * 86400
 
     return timerTime
 
@@ -65,7 +65,7 @@ for i in range(len(cronStringLst)):
             elif nowDay > int(cronStringLst[i]):
                 timerTime = calcDayForMonth(timerTime, cronStringLst[i])
                 #timerTime = timerTime + (int(dayOfMount[datetime.datetime.fromtimestamp(timerTime).month - 1]) - int(cronStringLst[i]) + nowDay) * 86400
-                numberOfDays = dayOfMount[datetime.datetime.fromtimestamp(timerTime).month - 1]
+                numberOfDays = dayOfMonth[datetime.datetime.fromtimestamp(timerTime).month - 1]
                 if datetime.datetime.fromtimestamp(timerTime).month == 2:
                     if datetime.datetime.fromtimestamp(timerTime).year % 4 == 0:
                         numberOfDays = numberOfDays + 1
