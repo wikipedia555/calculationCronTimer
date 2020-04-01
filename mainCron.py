@@ -39,7 +39,19 @@ class Cron:
         for i in range(len(self.cronStringLst)):
             if i == 0:
                 if self.cronStringLst[i] == "*":
-                    timerTime = timerTime + 60
+                    if self.cronStringLst[i + 1] == "*":
+                        timerTime = timerTime + 60
+                    else:
+                        if int(datetime.datetime.fromtimestamp(timerTime).hour) == int(self.cronStringLst[i+1]):
+                            timerTime = timerTime + 60
+                        else:
+                            timerTime = timerTime - ((int(datetime.datetime.fromtimestamp(timerTime).minute)) * 60)
+
+
+                    # if self.cronStringLst[i] == "*":
+                        #     timerTime = timerTime + 60
+                        # else:
+                        #     timerTime = timerTime - ((int(datetime.datetime.fromtimestamp(timerTime).minute)) * 60)
                 else:
                     if int(nowTimeLst[i]) < int(self.cronStringLst[i]):
                         timerTime = timerTime + (int(self.cronStringLst[i]) - int(nowTimeLst[i]))*60
@@ -107,7 +119,7 @@ class Cron:
         return timerTime
 
 if __name__ == "__main__":
-    cronStr = "* 13 8 *"
+    cronStr = "1 * * *"
     cron = Cron(cronStr)
     nowTime = datetime.datetime.now().replace(microsecond=0).replace(second=0)
     cron.calcCron(nowTime)
