@@ -1,7 +1,7 @@
 import datetime
 # weekday (0 = Monday)
 # min. hour. day. weekday
-cronString = "* 15 6 4"
+cronString = "15 15 31 5"
 nowTime = datetime.datetime.now().timestamp()
 #check = (datetime.datetime.fromtimestamp(nowTime).day)
 dayOfMount = [31,28,31,30,31,30,31,31,30,31,30,31]
@@ -18,6 +18,19 @@ def calcDayForWeekday(timerTime, dayTimer):
         timerTime = timerTime + 7 * 86400
 
     return timerTime
+
+
+def calcDayForMonth (timerTime, day):
+    if int(dayOfMount[datetime.datetime.fromtimestamp(timerTime).month - 1]) > int(day):
+        pass
+    else:
+        today = datetime.datetime.fromtimestamp(timerTime).day
+        timerTime = timerTime + (int(dayOfMount[datetime.datetime.fromtimestamp(timerTime).month - 1]) - today + 1) * 86400
+        while int(dayOfMount[datetime.datetime.fromtimestamp(timerTime).month - 1]) < int(day):
+            timerTime = timerTime + int(dayOfMount[datetime.datetime.fromtimestamp(timerTime).month - 1]) * 86400
+
+    return timerTime
+
 
 for i in range(len(cronStringLst)):
     if i == 0:
@@ -47,8 +60,10 @@ for i in range(len(cronStringLst)):
         else:
             nowDay = datetime.datetime.fromtimestamp(timerTime).day
             if nowDay < int(cronStringLst[i]):
+                timerTime = calcDayForMonth(timerTime, cronStringLst[i])
                 timerTime = timerTime + (int(cronStringLst[i]) - nowDay) * 86400
             elif nowDay > int(cronStringLst[i]):
+                timerTime = calcDayForMonth(timerTime, cronStringLst[i])
                 #timerTime = timerTime + (int(dayOfMount[datetime.datetime.fromtimestamp(timerTime).month - 1]) - int(cronStringLst[i]) + nowDay) * 86400
                 numberOfDays = dayOfMount[datetime.datetime.fromtimestamp(timerTime).month - 1]
                 if datetime.datetime.fromtimestamp(timerTime).month == 2:
