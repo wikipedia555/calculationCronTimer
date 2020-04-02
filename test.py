@@ -1,4 +1,4 @@
-cronString = "45 23 31 7"
+cronString = "45 17 31 7"
 cronStringLst = cronString.split()
 errFlag = False
 
@@ -9,28 +9,31 @@ def checkValue(value):
     else:
         return "err"
 
-def checkErr(errFlag, a,b):
-    if checkValue(cronStringLst[i]) == True:
-        if not (a <= int(cronStringLst[i]) <= b):
+def checkErr(errFlag, a,b, value):
+    if checkValue(value) == True:
+        if not (a <= int(value) <= b):
             errFlag = True
-    elif checkValue(cronStringLst[i]) == "err":
+    elif checkValue(value) == "err":
         errFlag = True
     else:
         pass
 
     return errFlag
 
+def enumerationCheckErr(cronStringLst, errFlag):
 
-for i in range(len(cronStringLst)):
-    if i == 0:
-        errFlag = checkErr(errFlag, 0, 59)
-    elif i == 1:
-        errFlag = checkErr(errFlag, 0, 23)
-    elif i == 2:
-        errFlag = checkErr(errFlag, 1, 31)
-    elif i == 3:
-        errFlag = checkErr(errFlag, 1, 7)
-    else:
-        pass
+    for i in range(len(cronStringLst)):
+        if i == 0:
+            errFlag = checkErr(errFlag, 0, 59, cronStringLst[i])
+        elif i == 1:
+            errFlag = checkErr(errFlag, 0, 23, cronStringLst[i])
+        elif i == 2:
+            errFlag = checkErr(errFlag, 1, 31, cronStringLst[i])
+        elif i == 3:
+            errFlag = checkErr(errFlag, 1, 7, cronStringLst[i])
+        else:
+            pass
 
-print(errFlag)
+    print(errFlag)
+
+enumerationCheckErr(cronStringLst,errFlag)
