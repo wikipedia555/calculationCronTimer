@@ -49,6 +49,18 @@ class Cron:
         print(errFlag)
         return(errFlag)
 
+    def zeroMinutes(self, timerTime):
+        if self.cronStringLst[0] == "*":
+            timerTime = timerTime - datetime.datetime.fromtimestamp(timerTime).minute * 60
+
+        return timerTime
+
+    def zeroHour(self, timerTime):
+        if self.cronStringLst[1] == "*":
+            timerTime = timerTime - datetime.datetime.fromtimestamp(timerTime).hour * 3600
+
+        return timerTime
+
 
     def calcDayForWeekday(self, timerTime, dayTimer):
         while int(datetime.datetime.fromtimestamp(timerTime).day) != int(dayTimer):
@@ -118,10 +130,14 @@ class Cron:
                         if nowDay < int(self.cronStringLst[i]):
                             timerTime = self.calcDayForMonth(timerTime, self.cronStringLst[i])
                             timerTime = timerTime + (int(self.cronStringLst[i]) - nowDay) * 86400
+                            timerTime = self.zeroHour(timerTime)
+                            timerTime = self.zeroMinutes(timerTime)
                         elif nowDay > int(self.cronStringLst[i]):
                             timerTime = self.calcDayForMonth(timerTime, self.cronStringLst[i])
                             #timerTime = timerTime + (int(dayOfMount[datetime.datetime.fromtimestamp(timerTime).month - 1]) - int(cronStringLst[i]) + nowDay) * 86400
                             numberOfDays = self.dayOfMonth[datetime.datetime.fromtimestamp(timerTime).month - 1]
+                            timerTime = self.zeroHour(timerTime)
+                            timerTime = self.zeroMinutes(timerTime)
                             if datetime.datetime.fromtimestamp(timerTime).month == 2:
                                 if datetime.datetime.fromtimestamp(timerTime).year % 4 == 0:
                                     numberOfDays = numberOfDays + 1
@@ -159,7 +175,7 @@ class Cron:
             return timerTime
 
 if __name__ == "__main__":
-    cronStr = "1 * 32 *"
+    cronStr = "* 14 3 5"
     cron = Cron(cronStr)
     nowTime = datetime.datetime.now().replace(microsecond=0).replace(second=0)
     cron.calcCron(nowTime)
