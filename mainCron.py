@@ -6,6 +6,24 @@ class Cron:
 
         self.dayOfMonth = [31,28,31,30,31,30,31,31,30,31,30,31]
         self.cronStringLst = cronString.split()
+        print(self.cronStringLst)
+
+    def checkInterval (self, value,a,b):
+        vlst = value.split('-')
+        if vlst[0].isdigit() and vlst[1].isdigit and len(vlst) == 2:
+            if (a <= int(vlst[0]) <= b) and (a <= int(vlst[1]) <= b):
+                return False
+            else:
+                return True
+
+        vlst = value.split('/')
+        if vlst[0] == "*" and vlst[1].isdigit and len(vlst) == 2:
+            if a <= int(vlst[1]) <= b:
+                return False
+            else:
+                return True
+        else:
+            return True
 
 
     def checkValue(self, value):
@@ -20,7 +38,7 @@ class Cron:
             if not (a <= int(value) <= b):
                 errFlag = True
         elif self.checkValue(value) == "err":
-            errFlag = True
+            errFlag = self.checkInterval(value, a, b)
         else:
             pass
 
@@ -41,6 +59,18 @@ class Cron:
 
         print(errFlag)
         return(errFlag)
+    def zeroMinutesInterval(self, timerTime, cronFakeStr):
+        if not self.cronStringLst[0].isdigit() and self.cronStringLst[0] != "*":
+            timerTime = timerTime - datetime.datetime.fromtimestamp(timerTime).minute * 60 + int(cronFakeStr[0]) * 60
+        return timerTime
+
+
+    def zerohourInterval(self, timerTime, cronFakeStr):
+        if not self.cronStringLst[1].isdigit() and self.cronStringLst[1] != "*":
+            timerTime = timerTime - datetime.datetime.fromtimestamp(timerTime).hour * 3600 + int(cronFakeStr[1]) * 3600
+
+        return timerTime
+
 
     def zeroMinutes(self, timerTime):
         if self.cronStringLst[0] == "*":
@@ -74,55 +104,127 @@ class Cron:
         return timerTime
 
     def calcCron(self, nowTime):
+        cronFakeStr = ['-1', '-1', '-1', '-1']
         timerTime = nowTime.timestamp()
         nowTimeLst = [nowTime.minute, nowTime.hour, nowTime.day, nowTime.month, nowTime.year, nowTime.weekday()]
         for i in range(len(self.cronStringLst)):
             if i == 0:
-                if self.cronStringLst[i] == "*":
-                    if self.cronStringLst[i + 1] == "*":
-                        timerTime = timerTime + 60
-                    else:
-                        if int(datetime.datetime.fromtimestamp(timerTime).hour) == int(self.cronStringLst[i+1]):
+                if self.cronStringLst[i].isdigit() or self.cronStringLst[i] == "*":
+                    if self.cronStringLst[i] == "*":
+                        #pass
+                        if self.cronStringLst[i + 1] == "*":
                             timerTime = timerTime + 60
-                        else:
-                            timerTime = timerTime - ((int(datetime.datetime.fromtimestamp(timerTime).minute)) * 60)
-                else:
-                    if int(nowTimeLst[i]) < int(self.cronStringLst[i]):
-                        timerTime = timerTime + (int(self.cronStringLst[i]) - int(nowTimeLst[i]))*60
-                    elif int(nowTimeLst[i]) > int(self.cronStringLst[i]):
-                        timerTime = timerTime + (60-int(nowTimeLst[i]) + int(self.cronStringLst[i])) * 60
+                        if self.cronStringLst[i+1].isdigit():
+                            if int(datetime.datetime.fromtimestamp(timerTime).hour) == int(self.cronStringLst[i+1]):
+                                timerTime = timerTime + 60
+                            else:
+                                timerTime = timerTime - ((int(datetime.datetime.fromtimestamp(timerTime).minute)) * 60)
                     else:
-                        timerTime = timerTime + 3600
-            elif i == 1:
-                if self.cronStringLst[i] == "*":
-                    pass
+                        if int(nowTimeLst[i]) < int(self.cronStringLst[i]):
+                            timerTime = timerTime + (int(self.cronStringLst[i]) - int(nowTimeLst[i]))*60
+                        elif int(nowTimeLst[i]) > int(self.cronStringLst[i]):
+                            timerTime = timerTime + (60-int(nowTimeLst[i]) + int(self.cronStringLst[i])) * 60
+                        else:
+                            timerTime = timerTime + 3600
                 else:
-                    nowHour = datetime.datetime.fromtimestamp(timerTime).hour
-                    if int(nowHour) < int(self.cronStringLst[i]):
-                        timerTime = timerTime + (int(self.cronStringLst[i]) - nowHour) * 3600
-                    elif int(nowHour) > int(self.cronStringLst[i]):
-                        timerTime = timerTime + (24-nowHour + int(self.cronStringLst[i]))*3600
+                    lst = self.cronStringLst[i].replace('/','-').split("-")
+                    print(lst)
+                    if lst[0].isdigit():
+                        cronFakeStr[i] = lst[0]
+                        if int(lst[0])<=int(datetime.datetime.fromtimestamp(timerTime).minute)<int(lst[1]):
+                            timerTime = timerTime + 60
+                        elif int(lst[0]) > datetime.datetime.fromtimestamp(timerTime).minute:
+                            timerTime = timerTime + (int(lst[0]) - datetime.datetime.fromtimestamp(timerTime).minute) * 60
+                        else:
+                            timerTime = timerTime + (60 - datetime.datetime.fromtimestamp(timerTime).minute + int(lst[0])) * 60
+                    else:
+                        pass
+
+            elif i == 1:
+                if self.cronStringLst[i].isdigit() or self.cronStringLst[i] == "*":
+                    if self.cronStringLst[i] == "*":
+                        pass
+                    else:
+                        nowHour = datetime.datetime.fromtimestamp(timerTime).hour
+                        if int(nowHour) < int(self.cronStringLst[i]):
+                            timerTime = timerTime + (int(self.cronStringLst[i]) - nowHour) * 3600
+                        elif int(nowHour) > int(self.cronStringLst[i]):
+                            timerTime = timerTime + (24-nowHour + int(self.cronStringLst[i]))*3600
+                        else:
+                            pass
+                else:
+                    lst = self.cronStringLst[i].replace('/', '-').split("-")
+                    print(lst)
+                    if lst[0].isdigit():
+                        cronFakeStr[i] = lst[0]
+                        if int(lst[0]) <= int(datetime.datetime.fromtimestamp(timerTime).hour) < int(lst[1]):
+                            pass
+                        elif int(lst[0]) > datetime.datetime.fromtimestamp(timerTime).hour:
+                            timerTime = timerTime + (int(lst[0]) - datetime.datetime.fromtimestamp(timerTime).hour) * 3600
+                            if self.cronStringLst[0] == "*":
+                                timerTime = timerTime - (datetime.datetime.fromtimestamp(timerTime).minute) * 60
+                            if not self.cronStringLst[0].isdigit() and self.cronStringLst[0] != "*":
+                                timerTime = timerTime - datetime.datetime.fromtimestamp(timerTime).minute * 60 + int(cronFakeStr[0])*60
+
+
+                        else:
+                            timerTime = timerTime + (24 - datetime.datetime.fromtimestamp(timerTime).hour + int(lst[0])) * 3600
                     else:
                         pass
             elif i == 2:
-                if(self.cronStringLst[i] == '*'):
-                    pass
+                if self.cronStringLst[i].isdigit() or self.cronStringLst[i] == "*":
+                    if(self.cronStringLst[i] == '*'):
+                        pass
+                    else:
+                        nowDay = datetime.datetime.fromtimestamp(timerTime).day
+                        if nowDay < int(self.cronStringLst[i]):
+                            timerTime = self.calcDayForMonth(timerTime, self.cronStringLst[i])
+                            timerTime = timerTime + (int(self.cronStringLst[i]) - nowDay) * 86400
+                            timerTime = self.zeroHour(timerTime)
+                            timerTime = self.zeroMinutes(timerTime)
+                            timerTime = self.zerohourInterval(timerTime,cronFakeStr)
+                            timerTime = self.zeroMinutesInterval(timerTime,cronFakeStr)
+                        elif nowDay > int(self.cronStringLst[i]):
+                            timerTime = self.calcDayForMonth(timerTime, self.cronStringLst[i])
+                            numberOfDays = self.dayOfMonth[datetime.datetime.fromtimestamp(timerTime).month - 1]
+                            timerTime = self.zeroHour(timerTime)
+                            timerTime = self.zeroMinutes(timerTime)
+                            timerTime = self.zerohourInterval(timerTime,cronFakeStr)
+                            timerTime = self.zeroMinutesInterval(timerTime,cronFakeStr)
+                            if datetime.datetime.fromtimestamp(timerTime).month == 2:
+                                if datetime.datetime.fromtimestamp(timerTime).year % 4 == 0:
+                                    numberOfDays = numberOfDays + 1
+                            timerTime = timerTime + (numberOfDays - nowDay + int(self.cronStringLst[i])) * 86400
+                        else:
+                            pass
                 else:
                     nowDay = datetime.datetime.fromtimestamp(timerTime).day
-                    if nowDay < int(self.cronStringLst[i]):
-                        timerTime = self.calcDayForMonth(timerTime, self.cronStringLst[i])
-                        timerTime = timerTime + (int(self.cronStringLst[i]) - nowDay) * 86400
-                        timerTime = self.zeroHour(timerTime)
-                        timerTime = self.zeroMinutes(timerTime)
-                    elif nowDay > int(self.cronStringLst[i]):
-                        timerTime = self.calcDayForMonth(timerTime, self.cronStringLst[i])
-                        numberOfDays = self.dayOfMonth[datetime.datetime.fromtimestamp(timerTime).month - 1]
-                        timerTime = self.zeroHour(timerTime)
-                        timerTime = self.zeroMinutes(timerTime)
-                        if datetime.datetime.fromtimestamp(timerTime).month == 2:
-                            if datetime.datetime.fromtimestamp(timerTime).year % 4 == 0:
-                                numberOfDays = numberOfDays + 1
-                        timerTime = timerTime + (numberOfDays - nowDay + int(self.cronStringLst[i])) * 86400
+                    lst = self.cronStringLst[i].replace('/', '-').split("-")
+                    print(lst)
+                    if lst[0].isdigit():
+                        cronFakeStr[i] = lst[0]
+                        if int(lst[0]) <= int(datetime.datetime.fromtimestamp(timerTime).day) < int(lst[1]):
+                            pass
+                        elif int(lst[0]) > datetime.datetime.fromtimestamp(timerTime).day:
+                            timerTime = timerTime + (int(lst[0]) - datetime.datetime.fromtimestamp(timerTime).day) * 86400
+                            # # null time minute
+                            # if self.cronStringLst[0] == "*":
+                            #     timerTime = timerTime - (datetime.datetime.fromtimestamp(timerTime).minute) * 60
+                            # if not self.cronStringLst[0].isdigit() and self.cronStringLst[0] != "*":
+                            #     timerTime = timerTime - datetime.datetime.fromtimestamp(timerTime).minute * 60 + int(cronFakeStr[0]) * 60
+                            # #null timer hour
+                            # if self.cronStringLst[1] == "*":
+                            #     timerTime = timerTime - (datetime.datetime.fromtimestamp(timerTime).hour) * 3600
+                            # if not self.cronStringLst[1].isdigit() and self.cronStringLst[1] != "*":
+                            #     timerTime = timerTime - datetime.datetime.fromtimestamp(timerTime).hour * 3600 + int(cronFakeStr[1]) * 3600
+                            timerTime = self.zeroMinutes(timerTime)
+                            timerTime = self.zeroHour(timerTime)
+                            timerTime = self.zerohourInterval(timerTime,cronFakeStr)
+                            timerTime = self.zeroMinutesInterval(timerTime,cronFakeStr)
+
+                        else:
+                            timerTime = timerTime + (self.dayOfMonth[datetime.datetime.fromtimestamp(
+                                timerTime).month - 1] - datetime.datetime.fromtimestamp(timerTime).day + int(lst[0])) * 86400
                     else:
                         pass
             elif i == 3:
@@ -156,7 +258,7 @@ class Cron:
         return timerTime
 
 if __name__ == "__main__":
-    cronStr = "* 11 3 5"
+    cronStr = "3-26 11-19 10 *"
     errFlag = False
     cron = Cron(cronStr)
     errFlag = cron.enumerationCheckErr(cron.cronStringLst, errFlag)

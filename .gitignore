@@ -2,3 +2,5 @@
 /.idea
 /test.py
 /mainCron2.py
+/cronInterval.py
+/mainCron(last).py
