@@ -11,7 +11,7 @@ class Cron:
     def checkInterval (self, value,a,b):
         vlst = value.split('-')
         if vlst[0].isdigit() and vlst[1].isdigit and len(vlst) == 2:
-            if (a <= int(vlst[0]) <= b) and (a <= int(vlst[1]) <= b):
+            if (a <= int(vlst[0]) <= b) and (a <= int(vlst[1]) <= b) and int(vlst[0]) <= int(vlst[1]):
                 return False
             else:
                 return True
@@ -65,7 +65,7 @@ class Cron:
         return timerTime
 
 
-    def zerohourInterval(self, timerTime, cronFakeStr):
+    def zeroHourInterval(self, timerTime, cronFakeStr):
         if not self.cronStringLst[1].isdigit() and self.cronStringLst[1] != "*":
             timerTime = timerTime - datetime.datetime.fromtimestamp(timerTime).hour * 3600 + int(cronFakeStr[1]) * 3600
 
@@ -88,6 +88,28 @@ class Cron:
     def calcDayForWeekday(self, timerTime, dayTimer):
         while int(datetime.datetime.fromtimestamp(timerTime).day) != int(dayTimer):
             timerTime = timerTime + 7 * 86400
+
+        return timerTime
+
+    def calcDayForWeekdayInterval(self, timerTime, dayTimer, a, b):
+        while int(datetime.datetime.fromtimestamp(timerTime).day) != int(dayTimer):
+            counter = int(a)
+            while counter <= int(b) and datetime.datetime.fromtimestamp(timerTime).day != int(dayTimer):
+                timerTime = timerTime + 86400
+            if datetime.datetime.fromtimestamp(timerTime).day != int(dayTimer):
+                timerTime = timerTime + (7 - datetime.datetime.fromtimestamp(timerTime).weekday()+1 + int(a)) * 86400
+
+        return timerTime
+
+    def calcIntervalDayForWeekdayInterval(self, timerTime, a, b, da, db):
+        check = True
+        www = datetime.datetime.fromtimestamp(timerTime).weekday()
+        dadada = datetime.datetime.fromtimestamp(timerTime).isoformat()
+        while check:
+            if(int(da) <= int(datetime.datetime.fromtimestamp(timerTime).day) <= int(db) and int(a) <= datetime.datetime.fromtimestamp(timerTime).weekday()+1 <= int(b)):
+                check = False
+            else:
+                timerTime = timerTime + 86400
 
         return timerTime
 
@@ -182,14 +204,14 @@ class Cron:
                             timerTime = timerTime + (int(self.cronStringLst[i]) - nowDay) * 86400
                             timerTime = self.zeroHour(timerTime)
                             timerTime = self.zeroMinutes(timerTime)
-                            timerTime = self.zerohourInterval(timerTime,cronFakeStr)
+                            timerTime = self.zeroHourInterval(timerTime,cronFakeStr)
                             timerTime = self.zeroMinutesInterval(timerTime,cronFakeStr)
                         elif nowDay > int(self.cronStringLst[i]):
                             timerTime = self.calcDayForMonth(timerTime, self.cronStringLst[i])
                             numberOfDays = self.dayOfMonth[datetime.datetime.fromtimestamp(timerTime).month - 1]
                             timerTime = self.zeroHour(timerTime)
                             timerTime = self.zeroMinutes(timerTime)
-                            timerTime = self.zerohourInterval(timerTime,cronFakeStr)
+                            timerTime = self.zeroHourInterval(timerTime,cronFakeStr)
                             timerTime = self.zeroMinutesInterval(timerTime,cronFakeStr)
                             if datetime.datetime.fromtimestamp(timerTime).month == 2:
                                 if datetime.datetime.fromtimestamp(timerTime).year % 4 == 0:
@@ -219,7 +241,7 @@ class Cron:
                             #     timerTime = timerTime - datetime.datetime.fromtimestamp(timerTime).hour * 3600 + int(cronFakeStr[1]) * 3600
                             timerTime = self.zeroMinutes(timerTime)
                             timerTime = self.zeroHour(timerTime)
-                            timerTime = self.zerohourInterval(timerTime,cronFakeStr)
+                            timerTime = self.zeroHourInterval(timerTime,cronFakeStr)
                             timerTime = self.zeroMinutesInterval(timerTime,cronFakeStr)
 
                         else:
@@ -228,28 +250,56 @@ class Cron:
                     else:
                         pass
             elif i == 3:
-                if(self.cronStringLst[i] == "*"):
-                    pass
-                else:
-                    if(self.cronStringLst[i-1] == "*"):
-                        numberOfWeekday = datetime.datetime.fromtimestamp(timerTime).weekday() + 1
-                        if numberOfWeekday < int(self.cronStringLst[i]):
-                            timerTime = timerTime + (int(self.cronStringLst[i]) - numberOfWeekday) * 86400
-                        elif numberOfWeekday > int(self.cronStringLst[i]):
-                            timerTime = timerTime + (7 - numberOfWeekday + int(self.cronStringLst[i])) * 86400
-                        else:
-                            pass
+                if self.cronStringLst[i].isdigit() or self.cronStringLst[i] == "*":
+                    if(self.cronStringLst[i] == "*"):
+                        pass
                     else:
-                        #dayTimer = int(self.cronStringLst[i-1])
-                        numberOfWeekday = datetime.datetime.fromtimestamp(timerTime).weekday() + 1
-                        if numberOfWeekday < int(self.cronStringLst[i]):
-                            timerTime = timerTime + (int(self.cronStringLst[i]) - numberOfWeekday) * 86400
-                            timerTime = self.calcDayForWeekday(timerTime, self.cronStringLst[i-1])
-                        elif numberOfWeekday > int(self.cronStringLst[i]):
-                            timerTime = timerTime + (7 - numberOfWeekday + int(self.cronStringLst[i])) * 86400
-                            timerTime = self.calcDayForWeekday(timerTime, self.cronStringLst[i-1])
+                        if(self.cronStringLst[i-1] == "*"):
+                            numberOfWeekday = datetime.datetime.fromtimestamp(timerTime).weekday() + 1
+                            if numberOfWeekday < int(self.cronStringLst[i]):
+                                timerTime = timerTime + (int(self.cronStringLst[i]) - numberOfWeekday) * 86400
+                            elif numberOfWeekday > int(self.cronStringLst[i]):
+                                timerTime = timerTime + (7 - numberOfWeekday + int(self.cronStringLst[i])) * 86400
+                            else:
+                                pass
                         else:
-                            timerTime = self.calcDayForWeekday(timerTime, self.cronStringLst[i-1])
+                            numberOfWeekday = datetime.datetime.fromtimestamp(timerTime).weekday() + 1
+                            if numberOfWeekday < int(self.cronStringLst[i]):
+                                timerTime = timerTime + (int(self.cronStringLst[i]) - numberOfWeekday) * 86400
+                                timerTime = self.calcDayForWeekday(timerTime, self.cronStringLst[i-1])
+                            elif numberOfWeekday > int(self.cronStringLst[i]):
+                                timerTime = timerTime + (7 - numberOfWeekday + int(self.cronStringLst[i])) * 86400
+                                timerTime = self.calcDayForWeekday(timerTime, self.cronStringLst[i-1])
+                            else:
+                                timerTime = self.calcDayForWeekday(timerTime, self.cronStringLst[i-1])
+                else:
+                    lst = self.cronStringLst[i].replace('/', '-').split("-")
+                    if lst[0].isdigit():
+                        if (self.cronStringLst[i - 1] == "*"):
+                            numberOfWeekday = datetime.datetime.fromtimestamp(timerTime).weekday() + 1
+                            if numberOfWeekday < int(lst[0]):
+                                timerTime = timerTime + (int(lst[0]) - numberOfWeekday) * 86400
+                            elif numberOfWeekday > int(lst[1]):
+                                timerTime = timerTime + (7 - numberOfWeekday + int(lst[0])) * 86400
+                            else:
+                                pass
+                        elif self.cronStringLst[i - 1].isdigit():
+                            # dayTimer = int(self.cronStringLst[i-1])
+                            numberOfWeekday = datetime.datetime.fromtimestamp(timerTime).weekday() + 1
+                            if numberOfWeekday < int(lst[0]):
+                                timerTime = timerTime + (int(lst[0]) - numberOfWeekday) * 86400
+                                timerTime = self.calcDayForWeekdayInterval(timerTime, self.cronStringLst[i - 1], lst[0], lst[1])
+                            elif numberOfWeekday > int(lst[1]):
+                                timerTime = timerTime + (7 - numberOfWeekday + int(lst[0])) * 86400
+                                timerTime = self.calcDayForWeekdayInterval(timerTime, self.cronStringLst[i - 1], lst[0], lst[1])
+                            else:
+                                timerTime = self.calcDayForWeekdayInterval(timerTime, self.cronStringLst[i - 1], lst[0], lst[1])
+                        else:
+                            lstday = self.cronStringLst[i-1].split("-")
+                            timerTime = self.calcIntervalDayForWeekdayInterval(timerTime,lst[0], lst[1], lstday[0], lstday[1])
+
+                    else:
+                        pass
 
 
 
@@ -258,7 +308,7 @@ class Cron:
         return timerTime
 
 if __name__ == "__main__":
-    cronStr = "3-26 11-19 10 *"
+    cronStr = "5 18-21 * 1-7"
     errFlag = False
     cron = Cron(cronStr)
     errFlag = cron.enumerationCheckErr(cron.cronStringLst, errFlag)
