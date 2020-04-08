@@ -126,6 +126,38 @@ class Cron:
 
         return timerTime
 
+
+    def calcDayForWeekdaySteps(self, timerTime, cronStringlst, cronFakeLst, value):
+
+        lst = cronStringlst[2].split('-')
+        if len(lst) == 2:
+            if lst[0].isdigit():
+                while  not(int(lst[0]) <= datetime.datetime.fromtimestamp(timerTime).day <= int(lst[1]) and (datetime.datetime.fromtimestamp(timerTime).weekday() + 1) % int(value) == 0):
+                    timerTime = timerTime + 86400
+
+        lst = cronStringlst[2].split('/')
+
+        if len(lst) == 2:
+            if lst[1].isdigit():
+                while not ((datetime.datetime.fromtimestamp(timerTime).weekday() + 1) % int(value) == 0 and datetime.datetime.fromtimestamp(timerTime).day % int(value) == 0):
+                    timerTime = timerTime + 86400
+
+        if cronStringlst[2].isdigit():
+            while not(datetime.datetime.fromtimestamp(timerTime).day == int(cronStringlst[2]) and (datetime.datetime.fromtimestamp(timerTime).weekday() + 1) % int(value) == 0):
+                timerTime = timerTime + 86400
+
+        if cronStringlst[2] == "*":
+            while not (datetime.datetime.fromtimestamp(timerTime).weekday() + 1) % int(value) == 0:
+                timerTime = timerTime + 86400
+
+        if int(cronFakeLst[1] == -1):
+            timerTime = timerTime - datetime.datetime.fromtimestamp(timerTime).hour * 3600
+        if int(cronFakeLst[0] == -1):
+            timerTime = timerTime - datetime.datetime.fromtimestamp(timerTime).minute * 60
+
+        return timerTime
+
+
     def calcCron(self, nowTime):
         cronFakeStr = ['-1', '-1', '-1', '-1']
         timerTime = nowTime.timestamp()
@@ -340,7 +372,12 @@ class Cron:
                             timerTime = self.calcIntervalDayForWeekdayInterval(timerTime,lst[0], lst[1], lstday[0], lstday[1])
 
                     else:
-                        pass
+                        nowWd = datetime.datetime.fromtimestamp(timerTime).weekday() + 1
+                        if nowWd % int(lst[1]) == 0:
+                            pass
+                        else:
+                            timerTime = self.calcDayForWeekdaySteps(timerTime, self.cronStringLst, cronFakeStr, lst[1])
+
 
 
 
@@ -349,7 +386,7 @@ class Cron:
         return timerTime
 
 if __name__ == "__main__":
-    cronStr = "32 21 */3 *"
+    cronStr = "30 * 25 */4"
     errFlag = False
     cron = Cron(cronStr)
     errFlag = cron.enumerationCheckErr(cron.cronStringLst, errFlag)
