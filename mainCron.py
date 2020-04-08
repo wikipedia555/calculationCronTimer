@@ -10,14 +10,14 @@ class Cron:
 
     def checkInterval (self, value,a,b):
         vlst = value.split('-')
-        if vlst[0].isdigit() and vlst[1].isdigit and len(vlst) == 2:
+        if vlst[0].isdigit() and vlst[1].isdigit() and len(vlst) == 2:
             if (a <= int(vlst[0]) <= b) and (a <= int(vlst[1]) <= b) and int(vlst[0]) <= int(vlst[1]):
                 return False
             else:
                 return True
 
         vlst = value.split('/')
-        if vlst[0] == "*" and vlst[1].isdigit and len(vlst) == 2:
+        if vlst[0] == "*" and vlst[1].isdigit() and len(vlst) == 2:
             if a <= int(vlst[1]) <= b:
                 return False
             else:
@@ -46,16 +46,17 @@ class Cron:
 
     def enumerationCheckErr(self, cronStringLst, errFlag):
         for i in range(len(cronStringLst)):
-            if i == 0:
-                errFlag = self.checkErr(errFlag, 0, 59, cronStringLst[i])
-            elif i == 1:
-                errFlag = self.checkErr(errFlag, 0, 23, cronStringLst[i])
-            elif i == 2:
-                errFlag = self.checkErr(errFlag, 1, 31, cronStringLst[i])
-            elif i == 3:
-                errFlag = self.checkErr(errFlag, 1, 7, cronStringLst[i])
-            else:
-                pass
+            if(not errFlag):
+                if i == 0:
+                    errFlag = self.checkErr(errFlag, 0, 59, cronStringLst[i])
+                elif i == 1:
+                    errFlag = self.checkErr(errFlag, 0, 23, cronStringLst[i])
+                elif i == 2:
+                    errFlag = self.checkErr(errFlag, 1, 31, cronStringLst[i])
+                elif i == 3:
+                    errFlag = self.checkErr(errFlag, 1, 7, cronStringLst[i])
+                else:
+                    pass
 
         print(errFlag)
         return(errFlag)
@@ -160,7 +161,16 @@ class Cron:
                         else:
                             timerTime = timerTime + (60 - datetime.datetime.fromtimestamp(timerTime).minute + int(lst[0])) * 60
                     else:
-                        pass
+                        cronFakeStr[i] = 0
+                        lst = self.cronStringLst[i].split('/')
+                        nowMin = datetime.datetime.fromtimestamp(timerTime).minute
+                        if nowMin == 0:
+                            timerTime = timerTime + int(lst[1]) * 60
+                        elif (nowMin - (nowMin % int(lst[1]))+ int(lst[1])) < 59:
+                            timerTime = timerTime + int(lst[1]) * 60 - (nowMin%int(lst[1])) * 60
+                        else:
+                            timerTime = timerTime + (60 - nowMin) * 60
+
 
             elif i == 1:
                 if self.cronStringLst[i].isdigit() or self.cronStringLst[i] == "*":
@@ -192,7 +202,27 @@ class Cron:
                         else:
                             timerTime = timerTime + (24 - datetime.datetime.fromtimestamp(timerTime).hour + int(lst[0])) * 3600
                     else:
-                        pass
+                        cronFakeStr[i] = 0
+                        lst = self.cronStringLst[i].split('/')
+                        nowHour = datetime.datetime.fromtimestamp(timerTime).hour
+                        if nowHour == 0:
+                            timerTime = timerTime + int(lst[1]) * 3600
+                        elif nowHour%int(lst[1]) == 0:
+                            pass
+                        elif (nowHour - (nowHour % int(lst[1])) + int(lst[1])) < 24 and nowHour%int(lst[1]) != 0:
+                            timerTime = timerTime - nowHour * 3600 + (nowHour - (nowHour % int(lst[1])) + int(lst[1])) * 3600
+                            if (int(cronFakeStr[i-1]) != -1):
+                                timerTime = timerTime - (datetime.datetime.fromtimestamp(timerTime).minute) * 60
+                        # elif (nowHour + int(lst[1])) < 24 and nowHour%int(lst[1]) != 0:
+                        #     timerTime = timerTime + int(lst[1]) * 3600 - (nowHour % int(lst[1])) * 3600
+                        #     timerTime = timerTime - (datetime.datetime.fromtimestamp(timerTime).minute) * 60
+                        # elif
+                        else:
+                            timerTime = timerTime + (24 - nowHour) * 3600
+                            if (int(cronFakeStr[i-1]) != -1):
+                                timerTime = timerTime - (datetime.datetime.fromtimestamp(timerTime).minute) * 60
+
+
             elif i == 2:
                 if self.cronStringLst[i].isdigit() or self.cronStringLst[i] == "*":
                     if(self.cronStringLst[i] == '*'):
@@ -248,7 +278,18 @@ class Cron:
                             timerTime = timerTime + (self.dayOfMonth[datetime.datetime.fromtimestamp(
                                 timerTime).month - 1] - datetime.datetime.fromtimestamp(timerTime).day + int(lst[0])) * 86400
                     else:
-                        pass
+                        cronFakeStr[i] = 1
+                        lst = self.cronStringLst[i].split('/')
+                        nowDay = datetime.datetime.fromtimestamp(timerTime).day
+                        numberOfDays = self.dayOfMonth[datetime.datetime.fromtimestamp(timerTime).month - 1]
+                        if nowDay - nowDay%int(lst[1]) + int(lst[1]) < numberOfDays:
+                            timerTime = timerTime - nowDay%int(lst[1]) * 86400 + int(lst[1]) * 86400
+                            if int(cronFakeStr[i-1] == -1):
+                                timerTime = timerTime - datetime.datetime.fromtimestamp(timerTime).hour * 3600
+                            if int(cronFakeStr[i-2] == -1):
+                                timerTime = timerTime - datetime.datetime.fromtimestamp(timerTime).minute * 60
+
+
             elif i == 3:
                 if self.cronStringLst[i].isdigit() or self.cronStringLst[i] == "*":
                     if(self.cronStringLst[i] == "*"):
@@ -308,7 +349,7 @@ class Cron:
         return timerTime
 
 if __name__ == "__main__":
-    cronStr = "5 18-21 * 1-7"
+    cronStr = "32 21 */3 *"
     errFlag = False
     cron = Cron(cronStr)
     errFlag = cron.enumerationCheckErr(cron.cronStringLst, errFlag)
